@@ -1,16 +1,23 @@
 """
-Simple RNN/LSTM Implementation
+Chapter 8: Recurrent Neural Networks - RNN/LSTM Implementation
 
-This exercise demonstrates:
-- Building RNN and LSTM models
-- Sequence processing
-- Handling variable-length sequences
+D2L Exercise: Building and training RNN and LSTM models for sequence processing.
 """
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
+import sys
+import os
+
+# Add plotting_tools to path
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../plotting_tools'))
+try:
+    from plotting_tools import plot_training_history
+except ImportError:
+    print("Warning: plotting_tools not found. Install it or add to PYTHONPATH.")
+    plot_training_history = None
 
 
 class SimpleRNN(nn.Module):

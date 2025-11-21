@@ -1,35 +1,61 @@
-# PyTorch Exercises
+# PyTorch Exercises - Dive into Deep Learning (D2L)
 
-A collection of PyTorch exercises and practice problems covering various deep learning concepts.
+Exercises and implementations from the "Dive into Deep Learning" book using PyTorch.
 
 ## Structure
 
-- `basics/` - Basic PyTorch operations and tensor manipulations
-- `neural_networks/` - Simple neural network implementations
-- `cnn/` - Convolutional Neural Network exercises
-- `rnn/` - Recurrent Neural Network exercises
-- `transformer/` - Transformer architecture exercises
-- `optimization/` - Optimization techniques and training loops
-- `datasets/` - Data loading and preprocessing exercises
-- `utils/` - Helper functions and utilities
+This project follows the D2L book chapter organization:
+
+- `chapter02_preliminaries/` - Data manipulation, linear algebra, calculus basics
+- `chapter03_linear_neural_networks/` - Linear regression, softmax regression
+- `chapter04_multilayer_perceptrons/` - MLPs, activation functions, dropout
+- `chapter05_deep_learning_computation/` - Model construction, parameter management
+- `chapter06_convolutional_neural_networks/` - Convolutional layers, pooling, LeNet
+- `chapter07_modern_cnn/` - Modern CNN architectures (AlexNet, VGG, ResNet, etc.)
+- `chapter08_recurrent_neural_networks/` - RNNs, GRUs, LSTMs
+- `chapter09_modern_rnn/` - Modern RNN architectures and techniques
+- `chapter10_attention_mechanisms/` - Attention mechanisms, Transformers
+- `chapter11_optimization_algorithms/` - Optimization techniques, learning rate scheduling
+- `chapter12_computational_performance/` - GPU computation, parallelization
+- `chapter13_computer_vision/` - Image augmentation, object detection, semantic segmentation
+- `chapter14_natural_language_processing/` - Word embeddings, text classification
+- `utils/` - D2L-specific utilities and helper functions
 
 ## Usage
 
-Each exercise is self-contained and can be run independently:
+Each chapter contains exercises that can be run independently:
 
 ```bash
-python basics/tensor_operations.py
+# Example: Run chapter 4 exercise
+python chapter04_multilayer_perceptrons/mlp_from_scratch.py
 ```
 
-## Requirements
+## Dependencies
 
-See `requirements.txt` for dependencies.
+- PyTorch >= 2.0.0
+- torchvision >= 0.15.0
+- numpy >= 1.24.0
+- plotting_tools (separate package for visualization)
 
-## Learning Path
+## Installation
 
-1. Start with `basics/` to understand tensor operations
-2. Move to `neural_networks/` for basic MLP implementations
-3. Explore `cnn/` for image processing
-4. Study `rnn/` for sequence modeling
-5. Learn `transformer/` for modern architectures
-6. Practice `optimization/` for training techniques
+1. Install PyTorch dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+2. Install plotting_tools package (from parent directory):
+```bash
+cd ../plotting_tools
+pip install -e .
+```
+
+Or add plotting_tools to your Python path:
+```bash
+export PYTHONPATH="${PYTHONPATH}:/path/to/plotting_tools"
+```
+
+## Reference
+
+- Book: [Dive into Deep Learning](https://d2l.ai/)
+- PyTorch Version: [D2L PyTorch](https://github.com/d2l-ai/d2l-pytorch)

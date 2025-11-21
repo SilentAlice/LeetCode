@@ -1,10 +1,7 @@
 """
-Simple Convolutional Neural Network (CNN) Implementation
+Chapter 6: Convolutional Neural Networks - LeNet Implementation
 
-This exercise demonstrates:
-- Building a CNN using nn.Module
-- Convolutional layers, pooling, and fully connected layers
-- Training on image data
+D2L Exercise: Building and training a CNN (LeNet-style) for image classification.
 """
 
 import torch
@@ -12,6 +9,17 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import torch.nn.functional as F
+import sys
+import os
+
+# Add plotting_tools to path
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../plotting_tools'))
+try:
+    from plotting_tools import visualize_tensor, plot_training_history
+except ImportError:
+    print("Warning: plotting_tools not found. Install it or add to PYTHONPATH.")
+    visualize_tensor = None
+    plot_training_history = None
 
 
 class SimpleCNN(nn.Module):

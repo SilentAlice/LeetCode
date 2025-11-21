@@ -1,18 +1,24 @@
 """
-Advanced Training Loop with Various Optimizers
+Chapter 11: Optimization Algorithms - Optimizer Comparison
 
-This exercise demonstrates:
-- Different optimizers (SGD, Adam, AdamW, RMSprop)
-- Learning rate scheduling
-- Gradient clipping
-- Model checkpointing
+D2L Exercise: Comparing different optimizers (SGD, Adam, AdamW, RMSprop) with
+learning rate scheduling and gradient clipping.
 """
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
+import sys
 import os
+
+# Add plotting_tools to path
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../plotting_tools'))
+try:
+    from plotting_tools import plot_learning_curves
+except ImportError:
+    print("Warning: plotting_tools not found. Install it or add to PYTHONPATH.")
+    plot_learning_curves = None
 
 
 class SimpleModel(nn.Module):

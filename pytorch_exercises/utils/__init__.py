@@ -1,1 +1,1 @@
-# Utility functions for PyTorch exercises
+# D2L-specific utilities and helper functions

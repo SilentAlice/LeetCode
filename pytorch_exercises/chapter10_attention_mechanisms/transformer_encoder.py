@@ -1,15 +1,22 @@
 """
-Simple Transformer Implementation
+Chapter 10: Attention Mechanisms - Transformer Encoder Implementation
 
-This exercise demonstrates:
-- Building a basic transformer encoder
-- Self-attention mechanism
-- Positional encoding
+D2L Exercise: Building a transformer encoder with self-attention and positional encoding.
 """
 
 import torch
 import torch.nn as nn
 import math
+import sys
+import os
+
+# Add plotting_tools to path
+sys.path.append(os.path.join(os.path.dirname(__file__), '../../plotting_tools'))
+try:
+    from plotting_tools import plot_training_history
+except ImportError:
+    print("Warning: plotting_tools not found. Install it or add to PYTHONPATH.")
+    plot_training_history = None
 
 
 class PositionalEncoding(nn.Module):
