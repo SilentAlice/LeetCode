@@ -2,6 +2,8 @@
 
 Python implementations of LeetCode problems.
 
+**Note**: This directory is part of the main `leetcode/` project. C implementations can be found in the `../c/` directory.
+
 ## Structure
 
 - `problems/` - Individual problem solutions
