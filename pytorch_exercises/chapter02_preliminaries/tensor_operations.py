@@ -10,7 +10,7 @@ import sys
 import os
 
 # Add plotting_tools to path (adjust path as needed)
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../plotting_tools'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../plotting_tools'))
 try:
     from plotting_tools import plot_distribution
 except ImportError:

@@ -4,5 +4,5 @@ numpy>=1.24.0
 jupyter>=1.0.0
 tqdm>=4.65.0
 
-# Note: plotting_tools is a separate package
-# Install it from ../plotting_tools or add to PYTHONPATH
+# Note: plotting_tools is included in this directory
+# No separate installation needed

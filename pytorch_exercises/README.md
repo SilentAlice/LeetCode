@@ -20,6 +20,7 @@ This project follows the D2L book chapter organization:
 - `chapter13_computer_vision/` - Image augmentation, object detection, semantic segmentation
 - `chapter14_natural_language_processing/` - Word embeddings, text classification
 - `utils/` - D2L-specific utilities and helper functions
+- `plotting_tools/` - Visualization package for training plots, images, and data analysis
 
 ## Usage
 
@@ -35,25 +36,16 @@ python chapter04_multilayer_perceptrons/mlp_from_scratch.py
 - PyTorch >= 2.0.0
 - torchvision >= 0.15.0
 - numpy >= 1.24.0
-- plotting_tools (separate package for visualization)
+- matplotlib >= 3.7.0 (for plotting_tools)
 
 ## Installation
 
-1. Install PyTorch dependencies:
+Install all dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Install plotting_tools package (from parent directory):
-```bash
-cd ../plotting_tools
-pip install -e .
-```
-
-Or add plotting_tools to your Python path:
-```bash
-export PYTHONPATH="${PYTHONPATH}:/path/to/plotting_tools"
-```
+The `plotting_tools` package is included in this directory and will be automatically available to all chapter exercises.
 
 ## Reference
 
