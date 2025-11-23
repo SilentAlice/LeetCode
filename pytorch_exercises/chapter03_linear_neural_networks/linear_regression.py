@@ -72,7 +72,7 @@ def train_scratch(features, labels, true_w, true_b):
     print(f'error in b: {true_b - b}')
     
     if plot_loss_curve:
-        plot_loss_curve(loss_history, label='Scratch Loss', title='Linear Regression (Scratch) Training Loss')
+        plot_loss_curve(loss_history, label='Scratch Loss', title='Linear Regression (Scratch) Training Loss', save_path='scratch_loss.png')
 
 def train_concise(features, labels, true_w, true_b):
     print("\n--- Training with PyTorch API ---")
@@ -113,7 +113,7 @@ def train_concise(features, labels, true_w, true_b):
     print(f'error in b: {true_b - b}')
 
     if plot_loss_curve:
-        plot_loss_curve(loss_history, label='API Loss', title='Linear Regression (API) Training Loss')
+        plot_loss_curve(loss_history, label='API Loss', title='Linear Regression (API) Training Loss', save_path='api_loss.png')
 
 def main():
     true_w = torch.tensor([2, -3.4])
