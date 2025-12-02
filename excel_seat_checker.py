@@ -64,7 +64,7 @@ def is_merged_cell(worksheet, row, col):
 
 def read_name_list(file_path: str, name_column: str = None) -> Set[str]:
     """
-    Read name list from Excel file.
+    Read name list from Excel file and return set of normalized names.
     
     Args:
         file_path: Path to the name list Excel file
@@ -98,6 +98,42 @@ def read_name_list(file_path: str, name_column: str = None) -> Set[str]:
             print(f"  Sheet '{sheet_name}': Found {len(normalized_names)} names")
         
         return all_names
+    
+    except Exception as e:
+        print(f"Error reading name list file: {e}")
+        sys.exit(1)
+
+
+def read_name_list_full(file_path: str, name_column: str = None) -> pd.DataFrame:
+    """
+    Read full name list from Excel file with all columns.
+    
+    Args:
+        file_path: Path to the name list Excel file
+        name_column: Column name containing names. If None, uses first column.
+    
+    Returns:
+        DataFrame with all columns from name list
+    """
+    try:
+        # Read all sheets and combine into one DataFrame
+        excel_file = pd.ExcelFile(file_path)
+        all_dfs = []
+        
+        for sheet_name in excel_file.sheet_names:
+            df = pd.read_excel(file_path, sheet_name=sheet_name)
+            
+            if df.empty:
+                continue
+            
+            all_dfs.append(df)
+        
+        if not all_dfs:
+            return pd.DataFrame()
+        
+        # Combine all sheets
+        combined_df = pd.concat(all_dfs, ignore_index=True)
+        return combined_df
     
     except Exception as e:
         print(f"Error reading name list file: {e}")
@@ -168,25 +204,25 @@ def read_seat_graph(file_path: str, max_rows: int = 1000, max_cols: int = 200) -
         sys.exit(1)
 
 
-def check_seats(name_list: Set[str], seat_graph: Dict[str, Dict[str, str]]) -> Tuple[List[str], List[Tuple[str, str]]]:
+def check_seats(name_list: Set[str], seat_graph: Dict[str, Dict[str, str]]) -> Tuple[List[str], List[Tuple[str, str, str]]]:
     """
     Check for missing seats and empty seats.
     
     Args:
         name_list: Set of normalized names from name list
-        seat_graph: Dictionary of {sheet_name: {seat_num: person_name}}
+        seat_graph: Dictionary of {building: {seat_num: person_name}}
     
     Returns:
         Tuple of (people_without_seats, empty_seats)
-        empty_seats is list of (sheet_name, seat_num) tuples
+        empty_seats is list of (building, seat_num, person_name) tuples
     """
     # Collect all names that have seats
     names_with_seats = set()
     all_seats = []
     
-    for sheet_name, seats in seat_graph.items():
+    for building, seats in seat_graph.items():
         for seat_num, person_name in seats.items():
-            all_seats.append((sheet_name, seat_num, person_name))
+            all_seats.append((building, seat_num, person_name))
             if person_name:
                 names_with_seats.add(person_name)
     
@@ -195,11 +231,90 @@ def check_seats(name_list: Set[str], seat_graph: Dict[str, Dict[str, str]]) -> T
     
     # Find seats without corresponding people in name list
     empty_seats = []
-    for sheet_name, seat_num, person_name in all_seats:
+    for building, seat_num, person_name in all_seats:
         if not person_name or person_name not in name_list:
-            empty_seats.append((sheet_name, seat_num, person_name))
+            empty_seats.append((building, seat_num, person_name))
     
     return people_without_seats, empty_seats
+
+
+def create_output_dataframe(name_list_df: pd.DataFrame, name_column: str, 
+                           seat_graph: Dict[str, Dict[str, str]], 
+                           name_list_set: Set[str]) -> pd.DataFrame:
+    """
+    Create output DataFrame with name list info and seat assignments.
+    
+    Args:
+        name_list_df: Full DataFrame from name list file
+        name_column: Column name containing names
+        seat_graph: Dictionary of {building: {seat_num: person_name}}
+        name_list_set: Set of normalized names from name list
+    
+    Returns:
+        DataFrame with all name list columns plus 'Seat' column, plus rows for unmatched seats
+    """
+    # Create reverse mapping: normalized_name -> (building, seat_num)
+    name_to_seat = {}
+    for building, seats in seat_graph.items():
+        for seat_num, person_name in seats.items():
+            if person_name and person_name in name_list_set:
+                if person_name not in name_to_seat:
+                    name_to_seat[person_name] = []
+                name_to_seat[person_name].append(f"{building}-{seat_num}")
+    
+    # Determine name column
+    if name_column and name_column in name_list_df.columns:
+        name_col = name_column
+    else:
+        name_col = name_list_df.columns[0]
+    
+    # Create a copy of the name list DataFrame
+    output_df = name_list_df.copy()
+    
+    # Add Seat column
+    output_df['Seat'] = ''
+    
+    # Fill in seat information for people who have seats
+    for idx, row in output_df.iterrows():
+        name = row[name_col]
+        if pd.notna(name):
+            normalized_name = normalize_name(name)
+            if normalized_name in name_to_seat:
+                # Join multiple seats if person has multiple seats
+                output_df.at[idx, 'Seat'] = ', '.join(name_to_seat[normalized_name])
+    
+    # Find unmatched seats (empty or with people not in name list)
+    unmatched_seats = []
+    for building, seats in seat_graph.items():
+        for seat_num, person_name in seats.items():
+            if not person_name or person_name not in name_list_set:
+                unmatched_seats.append({
+                    'building': building,
+                    'seat_num': seat_num,
+                    'person_name': person_name if person_name else '(empty)'
+                })
+    
+    # Add rows for unmatched seats
+    if unmatched_seats:
+        # Create DataFrame for unmatched seats
+        unmatched_rows = []
+        for seat_info in unmatched_seats:
+            row_data = {}
+            # Fill all original columns with empty values
+            for col in output_df.columns:
+                if col == 'Seat':
+                    row_data[col] = f"{seat_info['building']}-{seat_info['seat_num']}"
+                else:
+                    row_data[col] = ''
+            unmatched_rows.append(row_data)
+        
+        unmatched_df = pd.DataFrame(unmatched_rows)
+        # Ensure columns match exactly
+        unmatched_df = unmatched_df[output_df.columns]
+        # Combine with original DataFrame
+        output_df = pd.concat([output_df, unmatched_df], ignore_index=True)
+    
+    return output_df
 
 
 def main():
@@ -211,7 +326,7 @@ def main():
     parser.add_argument('--name-column', help='Column name for names in name list (auto-detect if not specified)')
     parser.add_argument('--max-rows', type=int, default=1000, help='Maximum rows to scan in seat graph (default: 1000)')
     parser.add_argument('--max-cols', type=int, default=200, help='Maximum columns to scan in seat graph (default: 200)')
-    parser.add_argument('--output', help='Output file path for results (CSV format)')
+    parser.add_argument('--output', help='Output file path for results (Excel format, default: seat_assignment_output.xlsx)')
     
     args = parser.parse_args()
     
@@ -228,10 +343,15 @@ def main():
     print("Excel Seat Checker")
     print("=" * 60)
     
-    # Read name list
+    # Read name list (both for checking and full data)
     print(f"\nReading name list from: {args.name_list_file}")
     name_list = read_name_list(args.name_list_file, args.name_column)
     print(f"Total unique names in name list: {len(name_list)}")
+    
+    # Read full name list DataFrame
+    print("Reading full name list data...")
+    name_list_df = read_name_list_full(args.name_list_file, args.name_column)
+    print(f"Total rows in name list: {len(name_list_df)}")
     
     # Read seat graph
     print(f"\nReading seat graph from: {args.seat_graph_file}")
@@ -240,7 +360,11 @@ def main():
     total_seats = sum(len(seats) for seats in seat_graph.values())
     print(f"Total seats across all buildings: {total_seats}")
     
-    # Perform checks
+    # Create output DataFrame
+    print("\nCreating output DataFrame...")
+    output_df = create_output_dataframe(name_list_df, args.name_column, seat_graph, name_list)
+    
+    # Perform checks for reporting
     print("\n" + "=" * 60)
     print("Analysis Results")
     print("=" * 60)
@@ -274,32 +398,13 @@ def main():
     print(f"Names without seats: {len(people_without_seats)}")
     print(f"Total seats: {total_seats}")
     print(f"Empty/unassigned seats: {len(empty_seats)}")
+    print(f"Total output rows: {len(output_df)}")
     
-    # Save to output file if specified
-    if args.output:
-        output_data = []
-        
-        # Add people without seats
-        for name in sorted(people_without_seats):
-            output_data.append({
-                'Type': 'Person Without Seat',
-                'Building': '',
-                'Seat': '',
-                'Name': name
-            })
-        
-        # Add empty seats
-        for building, seat_num, person_name in sorted(empty_seats):
-            output_data.append({
-                'Type': 'Empty Seat',
-                'Building': building,
-                'Seat': seat_num,
-                'Name': person_name if person_name else '(empty)'
-            })
-        
-        output_df = pd.DataFrame(output_data)
-        output_df.to_csv(args.output, index=False)
-        print(f"\nResults saved to: {args.output}")
+    # Save to output file
+    output_file = args.output if args.output else "seat_assignment_output.xlsx"
+    print(f"\nSaving results to: {output_file}")
+    output_df.to_excel(output_file, index=False, engine='openpyxl')
+    print(f"✓ Results saved successfully!")
 
 
 if __name__ == '__main__':

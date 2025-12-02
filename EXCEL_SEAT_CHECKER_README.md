@@ -38,8 +38,8 @@ python excel_seat_checker.py name_list.xlsx seat_graph.xlsx --name-column "Full 
 # Adjust scan limits for large files
 python excel_seat_checker.py name_list.xlsx seat_graph.xlsx --max-rows 2000 --max-cols 300
 
-# Export results to CSV
-python excel_seat_checker.py name_list.xlsx seat_graph.xlsx --output results.csv
+# Specify custom output file name (default: seat_assignment_output.xlsx)
+python excel_seat_checker.py name_list.xlsx seat_graph.xlsx --output my_results.xlsx
 ```
 
 ## Excel File Format
@@ -83,11 +83,19 @@ python excel_seat_checker.py name_list.xlsx seat_graph.xlsx --output results.csv
 
 ## Output
 
-The script provides:
+The script generates an **Excel file** with:
+1. **All original columns** from the name list file
+2. **New "Seat" column** containing seat assignments in format: `Building-SeatNumber` (e.g., `Building 1-1-001S`)
+3. **All rows from name list** with seat information filled in where available
+4. **Additional rows** for unmatched seats (empty seats or seats with people not in name list) - these rows have empty values for name list columns, only seat info is filled
+
+### Console Output
+
+The script also prints analysis results to console:
 1. **People without seats**: Names from the name list that don't appear in any seat assignment
 2. **Empty seats**: Seats that either have no name assigned or have names not in the name list
 
-Example output:
+Example console output:
 ```
 1. People in name list WITHOUT seats: 2
    - 张三
@@ -98,6 +106,15 @@ Example output:
    - Building 'Building 1', Seat '加座1': 赵六
    - Building 'Building 2', Seat '2-001S': (empty)
 ```
+
+### Excel Output Format
+
+The output Excel file contains:
+- **Original columns**: All columns from name list (e.g., Name, ID, Department, etc.)
+- **Seat column**: Seat assignment in format `Building-SeatNumber`
+- **Rows with seat info**: Original name list rows with seat column filled
+- **Rows without seat info**: Original name list rows with empty seat column (people without seats)
+- **Unmatched seat rows**: New rows with only seat column filled, other columns empty (empty seats or seats with people not in name list)
 
 ## Programmatic Usage
 
