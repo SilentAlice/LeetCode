@@ -64,40 +64,46 @@ def is_merged_cell(worksheet, row, col):
 
 def read_name_list(file_path: str, name_column: str = None) -> Set[str]:
     """
-    Read name list from Excel file and return set of normalized names.
+    Read name list from Excel file (first sheet only) and return set of normalized names.
     
     Args:
         file_path: Path to the name list Excel file
-        name_column: Column name containing names. If None, uses first column.
+        name_column: Column name containing names. If None, auto-detect "姓名" or use first column.
     
     Returns:
         Set of normalized names
     """
     try:
-        # Read all sheets and combine names
+        # Read only the first sheet
         excel_file = pd.ExcelFile(file_path)
-        all_names = set()
+        if not excel_file.sheet_names:
+            print("Error: Name list file has no sheets")
+            sys.exit(1)
         
-        for sheet_name in excel_file.sheet_names:
-            df = pd.read_excel(file_path, sheet_name=sheet_name)
-            
-            if df.empty:
-                continue
-            
-            # Use specified column or first column
-            if name_column and name_column in df.columns:
-                col = name_column
+        first_sheet = excel_file.sheet_names[0]
+        df = pd.read_excel(file_path, sheet_name=first_sheet)
+        
+        if df.empty:
+            print(f"Error: First sheet '{first_sheet}' is empty")
+            sys.exit(1)
+        
+        # Auto-detect name column
+        if name_column and name_column in df.columns:
+            col = name_column
+        else:
+            # Try to find "姓名" column (Chinese for "name")
+            if '姓名' in df.columns:
+                col = '姓名'
             else:
                 col = df.columns[0]
-            
-            # Extract names
-            names = df[col].dropna()
-            normalized_names = {normalize_name(name) for name in names if normalize_name(name)}
-            all_names.update(normalized_names)
-            
-            print(f"  Sheet '{sheet_name}': Found {len(normalized_names)} names")
         
-        return all_names
+        # Extract names
+        names = df[col].dropna()
+        normalized_names = {normalize_name(name) for name in names if normalize_name(name)}
+        
+        print(f"  Sheet '{first_sheet}': Found {len(normalized_names)} names")
+        
+        return normalized_names
     
     except Exception as e:
         print(f"Error reading name list file: {e}")
@@ -106,34 +112,44 @@ def read_name_list(file_path: str, name_column: str = None) -> Set[str]:
 
 def read_name_list_full(file_path: str, name_column: str = None) -> pd.DataFrame:
     """
-    Read full name list from Excel file with all columns.
+    Read full name list from Excel file (first sheet only) with all columns.
+    First row should be headers (e.g., "工号, 姓名, 入职日期, 三级部门, 四级部门").
     
     Args:
         file_path: Path to the name list Excel file
-        name_column: Column name containing names. If None, uses first column.
+        name_column: Column name containing names. If None, auto-detect "姓名" or use first column.
     
     Returns:
-        DataFrame with all columns from name list
+        DataFrame with all columns from name list (first sheet)
     """
     try:
-        # Read all sheets and combine into one DataFrame
+        # Read only the first sheet
         excel_file = pd.ExcelFile(file_path)
-        all_dfs = []
+        if not excel_file.sheet_names:
+            print("Error: Name list file has no sheets")
+            sys.exit(1)
         
-        for sheet_name in excel_file.sheet_names:
-            df = pd.read_excel(file_path, sheet_name=sheet_name)
-            
-            if df.empty:
-                continue
-            
-            all_dfs.append(df)
+        first_sheet = excel_file.sheet_names[0]
+        df = pd.read_excel(file_path, sheet_name=first_sheet)
         
-        if not all_dfs:
-            return pd.DataFrame()
+        if df.empty:
+            print(f"Error: First sheet '{first_sheet}' is empty")
+            sys.exit(1)
         
-        # Combine all sheets
-        combined_df = pd.concat(all_dfs, ignore_index=True)
-        return combined_df
+        # Remove rows where name column is empty (invalid rows)
+        if name_column and name_column in df.columns:
+            name_col = name_column
+        else:
+            # Try to find "姓名" column (Chinese for "name")
+            if '姓名' in df.columns:
+                name_col = '姓名'
+            else:
+                name_col = df.columns[0]
+        
+        # Remove rows with empty names (keep only valid rows)
+        df = df[df[name_col].notna()].copy()
+        
+        return df
     
     except Exception as e:
         print(f"Error reading name list file: {e}")
@@ -262,16 +278,18 @@ def create_output_dataframe(name_list_df: pd.DataFrame, name_column: str,
                     name_to_seat[person_name] = []
                 name_to_seat[person_name].append(f"{building}-{seat_num}")
     
-    # Determine name column
+    # Determine name column (auto-detect "姓名" if not specified)
     if name_column and name_column in name_list_df.columns:
         name_col = name_column
+    elif '姓名' in name_list_df.columns:
+        name_col = '姓名'
     else:
         name_col = name_list_df.columns[0]
     
     # Create a copy of the name list DataFrame
     output_df = name_list_df.copy()
     
-    # Add Seat column
+    # Add Seat column at the end (after all existing columns)
     output_df['Seat'] = ''
     
     # Fill in seat information for people who have seats

@@ -45,14 +45,16 @@ python excel_seat_checker.py name_list.xlsx seat_graph.xlsx --output my_results.
 ## Excel File Format
 
 ### Name List File
-- Can have multiple sheets
-- Contains names in one column (first column by default, or specify with `--name-column`)
+- **Only first sheet is read**
+- First row contains headers (e.g., "工号, 姓名, 入职日期, 三级部门, 四级部门")
+- Name column is auto-detected as "姓名" (Chinese for "name"), or use `--name-column` to specify
+- All columns are preserved in the output
 - Example:
   ```
-  Name
-  张三
-  李四
-  王五
+  工号 | 姓名 | 入职日期 | 三级部门 | 四级部门
+  001  | 张三 | 2020-01-01 | 技术部 | 开发组
+  002  | 李四 | 2020-02-01 | 技术部 | 测试组
+  003  | 王五 | 2020-03-01 | 产品部 | 设计组
   ```
 
 ### Seat Graph File (Special Format)
@@ -110,11 +112,20 @@ Example console output:
 ### Excel Output Format
 
 The output Excel file contains:
-- **Original columns**: All columns from name list (e.g., Name, ID, Department, etc.)
-- **Seat column**: Seat assignment in format `Building-SeatNumber`
+- **All original columns from name list**: Preserved in original order (e.g., 工号, 姓名, 入职日期, 三级部门, 四级部门, etc.)
+- **Seat column**: Appended at the end with seat assignment in format `Building-SeatNumber` (e.g., `Building 1-1-001S`)
 - **Rows with seat info**: Original name list rows with seat column filled
 - **Rows without seat info**: Original name list rows with empty seat column (people without seats)
 - **Unmatched seat rows**: New rows with only seat column filled, other columns empty (empty seats or seats with people not in name list)
+
+Example output structure:
+```
+工号 | 姓名 | 入职日期 | 三级部门 | 四级部门 | Seat
+001  | 张三 | 2020-01-01 | 技术部 | 开发组 | Building 1-1-001S
+002  | 李四 | 2020-02-01 | 技术部 | 测试组 | Building 1-1-002S
+003  | 王五 | 2020-03-01 | 产品部 | 设计组 | 
+     |      |           |         |         | Building 1-加座1
+```
 
 ## Programmatic Usage
 
